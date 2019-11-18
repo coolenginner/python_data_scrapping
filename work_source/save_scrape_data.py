@@ -12,6 +12,26 @@ config = {
     'raise_on_warnings': True
 }
 
+def update_nba_slates_db(slate_data):
+
+    salary = json.dumps(slate_data)
+    try:
+        connection = mysql.connector.connect(**config)
+        cursor = connection.cursor()
+
+        sql_select_query = """Update slates set salary = %s where site = %s and sport_type = %s"""
+        cursor.execute(sql_select_query, (salary,'FanDuel', sport_type, ))
+        connection.commit()
+    except mysql.connector.Error as error:
+        connection.rollback()
+        print("Failed to insert into MySQL table {}".format(error))
+    finally:
+        #closing database connection.
+        if(connection.is_connected()):    
+            cursor.close()
+            connection.close()
+            print("MySQL connection is closed")
+
 def insert_nba_slates_into_db(slate_data, sport_type):
 
     salary = json.dumps(slate_data)

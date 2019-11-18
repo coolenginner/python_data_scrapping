@@ -9,6 +9,7 @@ import sys
 import requests
 import csv
 import gc
+from save_scrape_data import *
 from decimal import Decimal
 from datetime import datetime
 from draftfast import rules
@@ -55,8 +56,8 @@ def optimizeJSON(payload):
             optimizer = get_optimizer(Site.FANDUEL, Sport.BASKETBALL)
         raw['FPPG'] = raw[payload["projection"]]
         raw['FPPG'] = pd.to_numeric(raw["FPPG"]).fillna(0)
-        raw['First Name'] = raw['Name'].map(lambda x: str(x).split()[0])
-        raw['Last Name'] = raw['Name'].map(lambda x: str(x).split()[1])
+        raw['First Name'] = raw['Name']
+        raw['Last Name'] = raw['Name']
         raw['Nickname'] = raw['Name']
         raw["Injury Indicator"] = ""
         raw['Team'] = raw['TeamAbbrev']
@@ -350,18 +351,13 @@ def upload_file():
                             projection_list.append(projection_row)
                         i = i + 1
                 cur = mysql.connection.cursor()
-                if site == "DraftKings":
-                    add_projection_query = """Update slates set projection = %s where site = %s and sport_type = %s"""
-                    data_salary = (json.dumps(projection_list), 'DraftKings', 'NBA')
+                add_projection_query = """Update slates set projection = %s where site = %s and sport_type = %s"""
+                    data_salary = (json.dumps(projection_list), site , 'NBA')
                     cur.execute(add_projection_query, data_salary)
                     mysql.connection.commit()
                     cur.close()
-                else:
-                    add_projection_query = """Update slates set projection = %s where site = %s and sport_type = %s"""
-                    data_salary = (json.dumps(projection_list), 'FanDuel', 'NBA')
-                    cur.execute(add_projection_query, data_salary)
-                    mysql.connection.commit()
-                    cur.close()
+                if site == "FanDuel":
+                   exec('scrape_scrape_NBA_FD.py')      
             if sport_type == "PGA":
                 ['Name', 'Salary', 'Position', 'TeamAbbrev',  'ID']
                 with open(filename, 'r') as file:
